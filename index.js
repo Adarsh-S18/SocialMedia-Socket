@@ -1,7 +1,7 @@
 
 const io = require("socket.io")(4000, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5000"],
+    origin: ["http://localhost:3000", "http://localhost:5000","https://hectrum.online","https://api.hectrum.online"],
   },
 });
 
