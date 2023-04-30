@@ -1,7 +1,7 @@
 
 const io = require("socket.io")(4000, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5000","https://hectrum.online","https://api.hectrum.online"],
+    origin: [ "https://hectrum.online","https://www.hectrum.online"],  //,"http://localhost:5000"  "http://localhost:3000",
   },
 });
 
@@ -17,44 +17,59 @@ const removeUser = (socketId) => {
 };
 
 const getUser = (userId) => {
-  return users.find((user) => user.userId === userId);
+  try {
+    console.log(users,"Array-users")
+    return users.find((user) => user.userId === userId);
+  } catch (error) {
+    console.log(error)
+  }
 };
-  
-io.on("connection", (socket) => {
-  //when connect
-  console.log("a user connected.");
 
+io.on("connection", (socket) => {
+  console.log("a user connected.");
+    
   //take userId and socketId from user
-  socket.on("addUser", (userId) => {
+
+  socket.on("addUser", ({userId}) => {
     addUser(userId, socket.id);
+    console.log(userId,"ID")
+    console.log(users,"array");
     io.emit("getUsers", users);
   });
 
   //send and get message
   socket.on("sendMessage", ({ senderId, receiverId, text }) => {
     try {
+      console.log(receiverId, "receiver")
+      console.log(senderId,"sender")
       const user = getUser(receiverId);
-      console.log(user,"message send");
-    socket.to(user.socketId).emit("getMessage", {
-      senderId,
-      text,
-      createdAt:Date.now()
-    });
+      console.log(user, "message send");
+      socket.to(user?.socketId).emit("getMessage", {
+        senderId,
+        text,
+        createdAt: Date.now()
+      });
     } catch (error) {
       console.log("user not available");
+      console.log(error,"SA")
     }
-    
+
   });
+  socket.on('newMessage', (message) => {
+    // Update the unread count for the conversation
+    setUnreadCount(unreadCount + 1);
+  });
+
   //notifications
 
-  socket.on("sendNotification", ({ senderId, type,userId }) => {
-    console.log("emitted",userId);
+  socket.on("sendNotification", ({ senderId, type, userId }) => {
+    console.log("emitted", userId);
     const receiver = getUser(userId);
-    console.log(userId,receiver);
+    console.log(userId, receiver);
     socket.to(receiver?.socketId).emit("getNotification", {
-      emiterId:senderId,
-      text:type,
-      createdAt:Date.now()
+      emiterId: senderId,
+      text: type,
+      createdAt: Date.now()
     });
   });
 
